@@ -3,35 +3,20 @@
 import { useState, useMemo } from "react";
 import { calcAge } from "@/utils/calculators";
 
-function parseDate(str: string): Date | null {
-  if (!str || str.length < 10) return null;
-  const [d, m, y] = str.split("-").map(Number);
-  if (!d || !m || !y || y < 1000) return null;
-  const date = new Date(y, m - 1, d);
-  if (isNaN(date.getTime())) return null;
-  return date;
-}
-
-function formatDateInput(value: string): string {
-  const digits = value.replace(/\D/g, "").slice(0, 8);
-  const parts: string[] = [];
-  if (digits.length > 0) parts.push(digits.slice(0, 2));
-  if (digits.length > 2) parts.push(digits.slice(2, 4));
-  if (digits.length > 4) parts.push(digits.slice(4, 8));
-  return parts.join("-");
+function toDate(iso: string): Date | null {
+  if (!iso) return null;
+  const d = new Date(iso);
+  return isNaN(d.getTime()) ? null : d;
 }
 
 export function AgeClient() {
-  const today = new Date();
-  const todayStr = formatDateInput(
-    `${String(today.getDate()).padStart(2, "0")}${String(today.getMonth() + 1).padStart(2, "0")}${today.getFullYear()}`
-  );
+  const today = new Date().toISOString().split("T")[0]; // YYYY-MM-DD
 
-  const [dobInput, setDobInput] = useState("");
-  const [onInput, setOnInput] = useState(todayStr);
+  const [dob, setDob] = useState("");
+  const [on, setOn] = useState(today);
 
-  const dobDate = useMemo(() => parseDate(dobInput), [dobInput]);
-  const onDate  = useMemo(() => parseDate(onInput),  [onInput]);
+  const dobDate = useMemo(() => toDate(dob), [dob]);
+  const onDate  = useMemo(() => toDate(on),  [on]);
 
   const isInvalidOrder = !!(dobDate && onDate && onDate < dobDate);
 
@@ -39,14 +24,6 @@ export function AgeClient() {
     if (!dobDate || !onDate || onDate < dobDate) return null;
     return calcAge(dobDate, onDate);
   }, [dobDate, onDate]);
-
-  const handleDob = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setDobInput(formatDateInput(e.target.value));
-  };
-
-  const handleOn = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setOnInput(formatDateInput(e.target.value));
-  };
 
   const hasValidDob = !!dobDate;
 
@@ -67,58 +44,55 @@ export function AgeClient() {
     </svg>
   );
 
+  const dateInputStyle: React.CSSProperties = {
+    border: `1px solid ${isInvalidOrder ? "#f87171" : "var(--border)"}`,
+    borderRadius: 10,
+    padding: "10px 14px",
+    fontSize: 15,
+    color: "var(--text)",
+    outline: "none",
+    width: "100%",
+    boxSizing: "border-box",
+    background: "var(--bg-subtle)",
+    transition: "border-color 0.15s",
+    colorScheme: "dark",
+    cursor: "pointer",
+  };
+
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 20, width: "100%", maxWidth: 560, margin: "0 auto", padding: "16px 0", fontFamily: "var(--font-body)" }}>
 
       {/* Date inputs */}
       <div style={{ background: "var(--bg-card)", borderRadius: 16, padding: "20px 24px", border: "1px solid var(--border)" }}>
         <div style={{ display: "flex", gap: 16 }}>
+
+          {/* Date of Birth */}
           <div style={{ flex: 1, display: "flex", flexDirection: "column", gap: 8 }}>
             <label style={{ fontSize: 13, color: "var(--text-muted)", fontWeight: 500, display: "flex", alignItems: "center", gap: 6 }}>
               <CalIcon /> Date of Birth
             </label>
             <input
-              style={{
-                border: `1px solid ${isInvalidOrder ? "#f87171" : "var(--border)"}`,
-                borderRadius: 10,
-                padding: "10px 14px",
-                fontSize: 15,
-                color: "var(--text)",
-                outline: "none",
-                width: "100%",
-                boxSizing: "border-box",
-                background: "var(--bg-subtle)",
-                transition: "border-color 0.15s",
-              }}
-              value={dobInput}
-              onChange={handleDob}
-              placeholder="DD-MM-YYYY"
-              maxLength={10}
+              type="date"
+              style={dateInputStyle}
+              value={dob}
+              max={today}
+              onChange={(e) => setDob(e.target.value)}
             />
           </div>
+
+          {/* Calculate Age On */}
           <div style={{ flex: 1, display: "flex", flexDirection: "column", gap: 8 }}>
             <label style={{ fontSize: 13, color: "var(--text-muted)", fontWeight: 500, display: "flex", alignItems: "center", gap: 6 }}>
               <ClockIcon /> Calculate Age On
             </label>
             <input
-              style={{
-                border: `1px solid ${isInvalidOrder ? "#f87171" : "var(--border)"}`,
-                borderRadius: 10,
-                padding: "10px 14px",
-                fontSize: 15,
-                color: "var(--text)",
-                outline: "none",
-                width: "100%",
-                boxSizing: "border-box",
-                background: "var(--bg-subtle)",
-                transition: "border-color 0.15s",
-              }}
-              value={onInput}
-              onChange={handleOn}
-              placeholder="DD-MM-YYYY"
-              maxLength={10}
+              type="date"
+              style={dateInputStyle}
+              value={on}
+              onChange={(e) => setOn(e.target.value)}
             />
           </div>
+
         </div>
         {isInvalidOrder && (
           <p style={{ marginTop: 10, marginBottom: 0, fontSize: 12, color: "#ef4444", fontWeight: 500 }}>

@@ -162,7 +162,7 @@ export function BMIClient() {
     <div
       style={{
         display: "grid",
-        gridTemplateColumns: "clamp(220px, 35%, 260px) 1fr",
+        gridTemplateColumns: "40% 60%",
         border: "0.5px solid var(--border)",
         borderRadius: 12,
         overflow: "hidden",
